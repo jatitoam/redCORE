@@ -31,10 +31,17 @@ class ModRedCORELanguageSwitcherHelper
 		$db = JFactory::getDbo();
 
 		$Itemid = $app->input->getInt('Itemid', 0);
-		$uri = new JURI(Juri::current());
-		$uri->delVar('lang');
-		$uri->delVar('Itemid');
-		$location = htmlspecialchars($uri->getQuery());
+
+		// This will enable both SEF and non-SEF URI to be parsed properly
+		$router = JRouter::getInstance('site');
+		$uri = Juri::getInstance();
+		$urimod = clone $uri;
+
+		$query = $router->parse($urimod);
+		unset($query['lang']);
+		unset($query['Itemid']);
+
+		$location = JUri::buildQuery($query);
 
 		if (!$Itemid)
 		{
@@ -52,7 +59,7 @@ class ModRedCORELanguageSwitcherHelper
 			self::resetMenuItems();
 			$db->forceLanguageTranslation = false;
 			$languages[$i]->active = ($language->lang_code == $currentLang);
-			$languages[$i]->link = RRoute::_('index.php?' . $location . '&lang=' . $language->sef . ($Itemid > 0 ? '&Itemid=' . $Itemid : ''));
+			$languages[$i]->link = RRoute::_('index.php?' . $location . ($Itemid > 0 ? '&Itemid=' . $Itemid : '') . '&lang=' . $language->sef);
 		}
 
 		self::resetMenuItems();
