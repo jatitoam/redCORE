@@ -197,7 +197,7 @@ abstract class JHtmlRsearchtools
 		static::main();
 
 		$direction = strtolower($direction);
-		$orderIcons = array('icon-chevron-up', 'icon-chevron-down');
+		$orderIcons = array('fa fa-chevron-up', 'fa fa-chevron-down');
 		$index = (int) ($direction == 'desc');
 
 		if ($order != $selected)
