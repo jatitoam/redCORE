@@ -344,6 +344,7 @@ final class RToolbarBuilder
 			$uri = JUri::getInstance();
 			$uri->setVar('format', 'csv');
 			$link = $uri->toString();
+			$uri->delVar('format');
 		}
 
 		return self::createLinkButton($link, 'LIB_REDCORE_CSV', 'icon-table');
