@@ -130,6 +130,12 @@ class RApiHalHal extends RApi
 	public $authorizationCheck = 'oauth2';
 
 	/**
+	 * @var    object  Array for storing operation errors
+	 * @since  1.6
+	 */
+	public $apiErrors = array();
+
+	/**
 	 * Method to instantiate the file-based api call.
 	 *
 	 * @param   mixed  $options  Optional custom options to load. JRegistry or array format
@@ -609,6 +615,16 @@ class RApiHalHal extends RApi
 			}
 		}
 
+		// Checking if primary keys are found
+		foreach ($primaryKeys as $primaryKey => $primaryKeyValue)
+		{
+			if (property_exists($itemObject, $primaryKey) && $itemObject->{$primaryKey} != $primaryKeyValue)
+			{
+				$itemObject = null;
+				break;
+			}
+		}
+
 		$this->triggerFunction('setForRenderItem', $itemObject, $currentConfiguration);
 
 		return $this;
@@ -628,14 +644,15 @@ class RApiHalHal extends RApi
 
 		$model = $this->triggerFunction('loadModel', $this->elementName, $this->operationConfiguration);
 		$functionName = RApiHalHelper::attributeToString($this->operationConfiguration, 'functionName', 'save');
-		$data = $this->triggerFunction('processPostData', $this->options->get('data', array()), $this->operationConfiguration);
 
+		$data = $this->triggerFunction('processPostData', $this->options->get('data', array()), $this->operationConfiguration);
 		$data = $this->triggerFunction('validatePostData', $model, $data, $this->operationConfiguration);
 
 		if ($data === false)
 		{
 			// Not Acceptable
-			$this->setStatusCode(406);
+			$customError = $this->triggerFunction('createCustomHttpError', 406, $this->apiErrors);
+			$this->setStatusCode(406, $customError);
 			$this->triggerFunction('displayErrors', $model);
 			$this->setData('result', $data);
 
@@ -653,12 +670,23 @@ class RApiHalHal extends RApi
 		}
 		else
 		{
-			$this->setStatusCode(400);
+			$customError = $this->triggerFunction('createCustomHttpError', 400, $this->apiErrors);
+			$this->setStatusCode(400, $customError);
 		}
 
 		if (method_exists($model, 'getState'))
 		{
 			$this->setData('id', $model->getState($model->getName() . '.id'));
+		}
+
+		if (method_exists($model, 'getErrors'))
+		{
+			$modelErrors = $model->getErrors();
+
+			if (!empty($modelErrors))
+			{
+				$this->apiErrors = array_merge($this->apiErrors, $modelErrors);
+			}
 		}
 
 		$this->setData('result', $result);
@@ -668,7 +696,8 @@ class RApiHalHal extends RApi
 		{
 			if ($result === false)
 			{
-				$this->setStatusCode(404);
+				$customError = $this->triggerFunction('createCustomHttpError', 404, $this->apiErrors);
+				$this->setStatusCode(404, $customError);
 			}
 			else
 			{
@@ -700,7 +729,8 @@ class RApiHalHal extends RApi
 		if ($data === false)
 		{
 			// Not Acceptable
-			$this->setStatusCode(406);
+			$customError = $this->triggerFunction('createCustomHttpError', 406, $this->apiErrors);
+			$this->setStatusCode(406, $customError);
 			$this->triggerFunction('displayErrors', $model);
 			$this->setData('result', $data);
 
@@ -734,7 +764,18 @@ class RApiHalHal extends RApi
 			}
 			else
 			{
-				$this->setStatusCode(400);
+				$customError = $this->triggerFunction('createCustomHttpError', 400, $this->apiErrors);
+				$this->setStatusCode(400, $customError);
+			}
+		}
+
+		if (method_exists($model, 'getErrors'))
+		{
+			$modelErrors = $model->getErrors();
+
+			if (!empty($modelErrors))
+			{
+				$this->apiErrors = array_merge($this->apiErrors, $modelErrors);
 			}
 		}
 
@@ -747,7 +788,8 @@ class RApiHalHal extends RApi
 			if ($result === false)
 			{
 				// If delete failed then we set it to Internal Server Error status code
-				$this->setStatusCode(500);
+				$customError = $this->triggerFunction('createCustomHttpError', 500, $this->apiErrors);
+				$this->setStatusCode(500, $customError);
 			}
 		}
 	}
@@ -772,7 +814,8 @@ class RApiHalHal extends RApi
 		if ($data === false)
 		{
 			// Not Acceptable
-			$this->setStatusCode(406);
+			$customError = $this->triggerFunction('createCustomHttpError', 406, $this->apiErrors);
+			$this->setStatusCode(406, $customError);
 			$this->triggerFunction('displayErrors', $model);
 			$this->setData('result', $data);
 
@@ -790,12 +833,23 @@ class RApiHalHal extends RApi
 		}
 		else
 		{
-			$this->setStatusCode(400);
+			$customError = $this->triggerFunction('createCustomHttpError', 400, $this->apiErrors);
+			$this->setStatusCode(400, $customError);
 		}
 
 		if (method_exists($model, 'getState'))
 		{
 			$this->setData('id', $model->getState(strtolower($this->elementName) . '.id'));
+		}
+
+		if (method_exists($model, 'getErrors'))
+		{
+			$modelErrors = $model->getErrors();
+
+			if (!empty($modelErrors))
+			{
+				$this->apiErrors = array_merge($this->apiErrors, $modelErrors);
+			}
 		}
 
 		$this->setData('result', $result);
@@ -806,7 +860,8 @@ class RApiHalHal extends RApi
 			if ($result === false)
 			{
 				// If update failed then we set it to Internal Server Error status code
-				$this->setStatusCode(500);
+				$customError = $this->triggerFunction('createCustomHttpError', 500, $this->apiErrors);
+				$this->setStatusCode(500, $customError);
 			}
 		}
 	}
@@ -843,7 +898,8 @@ class RApiHalHal extends RApi
 			if ($data === false)
 			{
 				// Not Acceptable
-				$this->setStatusCode(406);
+				$customError = $this->triggerFunction('createCustomHttpError', 406, $this->apiErrors);
+				$this->setStatusCode(406, $customError);
 				$this->triggerFunction('displayErrors', $model);
 				$this->setData('result', $data);
 
@@ -861,7 +917,19 @@ class RApiHalHal extends RApi
 			}
 			else
 			{
-				$this->setStatusCode(400);
+				$customError = $this->triggerFunction('createCustomHttpError', 400, $this->apiErrors);
+				$this->setStatusCode(400, $customError);
+				$this->triggerFunction('displayErrors', $model);
+			}
+
+			if (method_exists($model, 'getErrors'))
+			{
+				$modelErrors = $model->getErrors();
+
+				if (!empty($modelErrors))
+				{
+					$this->apiErrors = array_merge($this->apiErrors, $modelErrors);
+				}
 			}
 
 			if (method_exists($model, 'getState'))
@@ -1094,7 +1162,8 @@ class RApiHalHal extends RApi
 		else
 		{
 			// 404 => 'Not found'
-			$this->setStatusCode(404);
+			$customError = $this->triggerFunction('createCustomHttpError', 404, $this->apiErrors);
+			$this->setStatusCode(404, $customError);
 
 			throw new Exception(JText::_('LIB_REDCORE_API_HAL_WEBSERVICE_ERROR_NO_CONTENT'), 404);
 		}
@@ -1262,7 +1331,12 @@ class RApiHalHal extends RApi
 				$fieldAttributes = RApiHalHelper::getXMLElementAttributes($field);
 				$fieldAttributes['transform'] = !is_null($fieldAttributes['transform']) ? $fieldAttributes['transform'] : 'string';
 				$fieldAttributes['defaultValue'] = !is_null($fieldAttributes['defaultValue']) ? $fieldAttributes['defaultValue'] : '';
-				$data[$fieldAttributes['name']] = !is_null($data[$fieldAttributes['name']]) ? $data[$fieldAttributes['name']] : $fieldAttributes['defaultValue'];
+
+				if (!isset($data[$fieldAttributes['name']]) || is_null($data[$fieldAttributes['name']]))
+				{
+					$data[$fieldAttributes['name']] = $fieldAttributes['defaultValue'];
+				}
+
 				$data[$fieldAttributes['name']] = $this->transformField($fieldAttributes['transform'], $data[$fieldAttributes['name']], false);
 				$dataFields[$fieldAttributes['name']] = $data[$fieldAttributes['name']];
 			}
@@ -1368,6 +1442,8 @@ class RApiHalHal extends RApi
 	 */
 	public function checkRequiredFields($data, $configuration)
 	{
+		$errors = array();
+
 		if (!empty($configuration->fields))
 		{
 			foreach ($configuration->fields->field as $field)
@@ -1377,13 +1453,20 @@ class RApiHalHal extends RApi
 					if (is_null($data[(string) $field['name']]) || $data[(string) $field['name']] == '')
 					{
 						JFactory::getApplication()->enqueueMessage(
-							JText::sprintf('LIB_REDCORE_API_HAL_WEBSERVICE_ERROR_REQUIRED_FIELD', (string) $field['name']), 'error'
-						);
+						JText::sprintf('LIB_REDCORE_API_HAL_WEBSERVICE_ERROR_REQUIRED_FIELD', (string) $field['name']), 'error'
+					);
 
-						return false;
+						$errors[] = JText::sprintf('LIB_REDCORE_API_HAL_WEBSERVICE_ERROR_REQUIRED_FIELD', (string) $field['name']);
 					}
 				}
 			}
+		}
+
+		if (!empty($errors))
+		{
+			$this->apiErrors = array_merge($this->apiErrors, $errors);
+
+			return false;
 		}
 
 		return true;
@@ -1409,7 +1492,8 @@ class RApiHalHal extends RApi
 
 		if (!isset($allowedOperations->{$this->operation}))
 		{
-			$this->setStatusCode(405);
+			$customError = $this->triggerFunction('createCustomHttpError', 405, $this->apiErrors);
+			$this->setStatusCode(405, $customError);
 
 			return false;
 		}
@@ -1426,7 +1510,8 @@ class RApiHalHal extends RApi
 
 			if (!isset($allowedOperations->task->{$task}))
 			{
-				$this->setStatusCode(405);
+				$customError = $this->triggerFunction('createCustomHttpError', 405, $this->apiErrors);
+				$this->setStatusCode(405, $customError);
 
 				return false;
 			}
@@ -1507,7 +1592,8 @@ class RApiHalHal extends RApi
 
 				if (!$authorized)
 				{
-					$this->setStatusCode(405);
+					$customError = $this->triggerFunction('createCustomHttpError', 405, $this->apiErrors);
+					$this->setStatusCode(405, $customError);
 
 					return false;
 				}
@@ -1591,7 +1677,8 @@ class RApiHalHal extends RApi
 
 		if (!$authorized && $terminateIfNotAuthorized)
 		{
-			$this->setStatusCode(401);
+			$customError = $this->triggerFunction('createCustomHttpError', 401, $this->apiErrors);
+			$this->setStatusCode(401, $customError);
 		}
 
 		return $authorized || !$terminateIfNotAuthorized;
@@ -1886,6 +1973,14 @@ class RApiHalHal extends RApi
 
 		$this->optionName = $optionName;
 		$this->viewName = $viewName;
+
+		// We add separate view and option name if they were merged
+		if (!empty($viewName))
+		{
+			$input = JFactory::getApplication()->input;
+			$input->set('option', $optionName);
+			$input->set('view', $viewName);
+		}
 	}
 
 	/**
@@ -2292,16 +2387,47 @@ class RApiHalHal extends RApi
 			$model->getState();
 		}
 
+		$dataGet = $this->options->get('dataGet', array());
+
+		if (is_object($dataGet))
+		{
+			$dataGet = JArrayHelper::fromObject($dataGet);
+		}
+
+		$limitField = 'limit';
+		$limitStartField = 'limitstart';
+
+		if (method_exists($model, 'get'))
+		{
+			// RedCORE limit fields
+			$limitField = $model->get('limitField', $limitField);
+			$limitStartField = $model->get('limitstartField', $limitStartField);
+		}
+
+		if (isset($dataGet['list']['limit']))
+		{
+			$dataGet[$limitField] = $dataGet['list']['limit'];
+		}
+
+		if (isset($dataGet['list']['limitstart']))
+		{
+			$dataGet[$limitStartField] = $dataGet['list']['limitstart'];
+		}
+
+		// Support for B/C custom limit fields
+		if ($limitField != 'limit' && !empty($dataGet['limit']) && !isset($dataGet[$limitField]))
+		{
+			$dataGet[$limitField] = $dataGet['limit'];
+		}
+
+		if ($limitStartField != 'limitstart' && !empty($dataGet['limitstart']) && !isset($dataGet[$limitStartField]))
+		{
+			$dataGet[$limitStartField] = $dataGet['limitstart'];
+		}
+
 		// Set state for Filters and List
 		if (method_exists($model, 'setState'))
 		{
-			$dataGet = $this->options->get('dataGet', array());
-
-			if (is_object($dataGet))
-			{
-				$dataGet = JArrayHelper::fromObject($dataGet);
-			}
-
 			if (isset($dataGet['list']))
 			{
 				foreach ($dataGet['list'] as $key => $value)
@@ -2317,7 +2443,23 @@ class RApiHalHal extends RApi
 					$model->setState('filter.' . $key, $value);
 				}
 			}
+
+			if (isset($dataGet[$limitField]))
+			{
+				$model->setState('limit', $dataGet[$limitField]);
+				$model->setState('list.limit', $dataGet[$limitField]);
+				$model->setState($limitField, $dataGet[$limitField]);
+			}
+
+			if (isset($dataGet[$limitStartField]))
+			{
+				$model->setState('limitstart', $dataGet[$limitStartField]);
+				$model->setState('list.start', $dataGet[$limitStartField]);
+				$model->setState($limitStartField, $dataGet[$limitStartField]);
+			}
 		}
+
+		$this->options->set('dataGet', $dataGet);
 	}
 
 	/**
