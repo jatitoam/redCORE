@@ -615,13 +615,16 @@ class RApiHalHal extends RApi
 			}
 		}
 
-		// Checking if primary keys are found
-		foreach ($primaryKeys as $primaryKey => $primaryKeyValue)
+		if (RApiHalHelper::isAttributeTrue($currentConfiguration, 'enforcePKs', true))
 		{
-			if (property_exists($itemObject, $primaryKey) && $itemObject->{$primaryKey} != $primaryKeyValue)
+			// Checking if primary keys are found
+			foreach ($primaryKeys as $primaryKey => $primaryKeyValue)
 			{
-				$itemObject = null;
-				break;
+				if (property_exists($itemObject, $primaryKey) && $itemObject->{$primaryKey} != $primaryKeyValue)
+				{
+					$itemObject = null;
+					break;
+				}
 			}
 		}
 
@@ -2027,11 +2030,11 @@ class RApiHalHal extends RApi
 			{
 				if ($errors[$i] instanceof Exception)
 				{
-					$app->enqueueMessage($errors[$i]->getMessage(), 'warning');
+					$app->enqueueMessage($errors[$i]->getMessage(), 'error');
 				}
 				else
 				{
-					$app->enqueueMessage($errors[$i], 'warning');
+					$app->enqueueMessage($errors[$i], 'error');
 				}
 			}
 		}
