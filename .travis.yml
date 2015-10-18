@@ -9,7 +9,7 @@ services:
 before_script:
 - sudo apt-get update -qq
 - sudo apt-get install -y --force-yes curl php5-cli php5-curl zip unzip
-- curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
+- sudo curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
 - if [ -n "$GITHUB_TOKEN" ]; then composer config -g github-oauth.github.com $GITHUB_TOKEN; fi
 - composer install
 
