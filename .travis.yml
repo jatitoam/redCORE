@@ -1,4 +1,4 @@
-language: php
+language: c
 php:
 - 5.6
 
@@ -7,6 +7,7 @@ services:
 - docker
 
 before_script:
+- sudo apt-get update && sudo apt-get install php5-cli
 - if [ -n "$GITHUB_TOKEN" ]; then composer config -g github-oauth.github.com $GITHUB_TOKEN; fi
 - composer install
 
