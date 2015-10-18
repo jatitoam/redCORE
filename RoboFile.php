@@ -653,7 +653,6 @@ class RoboFile extends \Robo\Tasks
 					// Executes the client-layer container for this php/joomla version
 					// @toDO: Allow multiple versions of the app, for now it's "unique" version
 					$dockerContainer['client-' . $phpVersion . '-' . $joomlaVersion] = $this->taskDockerRun($appName . '-test-client:' . $phpVersion . '-' . $joomlaVersion)
-						->detached()
 						->name($appName . '-test-client-' . $phpVersion . '-' . $joomlaVersion)
 						->publish(5900 + $i, 5900)
 						->link($dockerContainer['php-' . $phpVersion], $appName . '-test-server-' . $phpVersion)
