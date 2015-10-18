@@ -1,0 +1,6 @@
+FROM jatitoam/joomla-test-client:firefox
+MAINTAINER Tito Alvarez <augustoalvarez@gmail.com> (@jaTITOam)
+
+# Copy application files
+COPY {app:name} /usr/src/app
+COPY entrypoint-specific.sh /usr/src/scripts/entrypoint-specific.sh

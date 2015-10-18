@@ -62,6 +62,7 @@ tests/api.suite.yml
 tests/*/*Tester.php
 tests/joomla-cms3*
 tests/_output
+tests/_dockerfiles
 selenium-server-standalone.jar
 codecept.phar
 selenium.log
