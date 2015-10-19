@@ -229,6 +229,12 @@ class Com_RedcoreInstallerScript
 	 */
 	public function installOrUpdate($parent)
 	{
+		// Temporary for Docker-basedd tests
+		if (version_compare(JVERSION, '3.4.4', 'gt'))
+		{
+			return false;
+		}
+
 		// Install extensions
 		// We have already installed redCORE library on preflight so we will not do it again
 		if ((get_called_class() != 'Com_RedcoreInstallerScript'))
