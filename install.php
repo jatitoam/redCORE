@@ -229,7 +229,7 @@ class Com_RedcoreInstallerScript
 	 */
 	public function installOrUpdate($parent)
 	{
-		// Temporary for Docker-basedd tests
+		// Temporary for Docker-based tests, to force a failure when Joomla > 3.4.4
 		if (version_compare(JVERSION, '3.4.4', 'gt'))
 		{
 			return false;
