@@ -229,12 +229,6 @@ class Com_RedcoreInstallerScript
 	 */
 	public function installOrUpdate($parent)
 	{
-		// Temporary for Docker-based tests, to force a failure when Joomla > 3.4.4
-		if (version_compare(JVERSION, '3.4.4', 'gt'))
-		{
-			return false;
-		}
-
 		// Install extensions
 		// We have already installed redCORE library on preflight so we will not do it again
 		if ((get_called_class() != 'Com_RedcoreInstallerScript'))
