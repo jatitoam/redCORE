@@ -5,9 +5,14 @@
  * Download robo.phar from http://robo.li/robo.phar and type in the root of the repo: $ php robo.phar
  * Or do: $ composer update, and afterwards you will be able to execute robo like $ php vendor/bin/robo
  *
+ * @copyright   Copyright (C) 2008 - 2016 redCOMPONENT.com. All rights reserved.
+ * @license     GNU General Public License version 2 or later, see LICENSE.
+ *
  * @see  http://robo.li/
  */
 require_once 'vendor/autoload.php';
+
+use Symfony\Component\Yaml\Yaml;
 
 /**
  * Class RoboFile
@@ -120,19 +125,17 @@ class RoboFile extends \Robo\Tasks
 	/**
 	 * Executes Selenium System Tests in your machine
 	 *
-	 * @param   array  $options  Use -h to see available options
+	 * @param   array  $opts  Use -h to see available options
 	 *
 	 * @return mixed
 	 */
 	public function runTest($opts = [
 		'test|t'	    => null,
-		'suite|s'	    => 'acceptance'
-	])
+		'suite|s'	    => 'acceptance'])
 	{
 		$this->getComposer();
 
 		$this->taskComposerInstall()->run();
-
 
 		if (isset($opts['suite']) && 'api' === $opts['suite'])
 		{
@@ -157,8 +160,10 @@ class RoboFile extends \Robo\Tasks
 			$iterator = new RecursiveIteratorIterator(
 				new RecursiveDirectoryIterator(
 						$this->testsFolder . $opts['suite'],
-					RecursiveDirectoryIterator::SKIP_DOTS),
-				RecursiveIteratorIterator::SELF_FIRST);
+						RecursiveDirectoryIterator::SKIP_DOTS
+					),
+						RecursiveIteratorIterator::SELF_FIRST
+				);
 
 			$tests = array();
 
@@ -185,7 +190,7 @@ class RoboFile extends \Robo\Tasks
 
 		$pathToTestFile = './' . $opts['suite'] . '/' . $opts['test'];
 
-		// loading the class to display the methods in the class
+		// Loading the class to display the methods in the class
 		require './' . $opts['suite'] . '/' . $opts['test'];
 
 		$classes = Nette\Reflection\AnnotationsParser::parsePhp(file_get_contents($pathToTestFile));
@@ -205,7 +210,7 @@ class RoboFile extends \Robo\Tasks
 			$this->say('');
 			$methodNumber = $this->askDefault('Choose the method in the test to run (hit ENTER for All)', 'All');
 
-			if($methodNumber != 'All')
+			if ($methodNumber != 'All')
 			{
 				$method = $testMethods[$methodNumber]->name;
 				$pathToTestFile = $pathToTestFile . ':' . $method;
@@ -261,19 +266,24 @@ class RoboFile extends \Robo\Tasks
 	/**
 	 * Function to Run tests in a Group
 	 *
+	 * @param   boool  $excludePreparation  Exclude preparation, including selenium scripts
+	 *
 	 * @return void
 	 */
-	public function runTests()
+	public function runTests($excludePreparation = false)
 	{
-		$this->prepareSiteForSystemTests();
+		if (!$excludePreparation)
+		{
+			$this->prepareSiteForSystemTests();
 
-		$this->prepareReleasePackages();
+			$this->prepareReleasePackages();
 
-		$this->getComposer();
+			$this->getComposer();
 
-		$this->taskComposerInstall()->run();
+			$this->taskComposerInstall()->run();
 
-		$this->runSelenium();
+			$this->runSelenium();
+		}
 
 		$this->taskWaitForSeleniumStandaloneServer()
 			->run()
@@ -283,36 +293,36 @@ class RoboFile extends \Robo\Tasks
 		$this->_exec("vendor/bin/codecept build");
 
 		$this->taskCodecept()
-		     ->arg('--steps')
-		     ->arg('--debug')
-		     ->arg('--fail-fast')
-		     ->arg($this->testsFolder . 'acceptance/install/')
-		     ->run()
-		     ->stopOnFail();
+			 ->arg('--steps')
+			 ->arg('--debug')
+			 ->arg('--fail-fast')
+			 ->arg($this->testsFolder . 'acceptance/install/')
+			 ->run()
+			 ->stopOnFail();
 
 		$this->taskCodecept()
-		     ->arg('--steps')
-		     ->arg('--debug')
-		     ->arg('--fail-fast')
-		     ->arg($this->testsFolder . 'acceptance/administrator/')
-		     ->run()
-		     ->stopOnFail();
+			 ->arg('--steps')
+			 ->arg('--debug')
+			 ->arg('--fail-fast')
+			 ->arg($this->testsFolder . 'acceptance/administrator/')
+			 ->run()
+			 ->stopOnFail();
 
 		$this->taskCodecept()
-		     ->arg('--steps')
-		     ->arg('--debug')
-		     ->arg('--fail-fast')
-		     ->arg('api')
-		     ->run()
-		     ->stopOnFail();
+			 ->arg('--steps')
+			 ->arg('--debug')
+			 ->arg('--fail-fast')
+			 ->arg('api')
+			 ->run()
+			 ->stopOnFail();
 
 		$this->taskCodecept()
-		     ->arg('--steps')
-		     ->arg('--debug')
-		     ->arg('--fail-fast')
-		     ->arg($this->testsFolder . 'acceptance/uninstall/')
-		     ->run()
-		     ->stopOnFail();
+			 ->arg('--steps')
+			 ->arg('--debug')
+			 ->arg('--fail-fast')
+			 ->arg($this->testsFolder . 'acceptance/uninstall/')
+			 ->run()
+			 ->stopOnFail();
 
 		$this->killSelenium();
 	}
@@ -376,7 +386,9 @@ class RoboFile extends \Robo\Tasks
 	 */
 	public function checkForParseErrors()
 	{
-		$this->_exec('php checkers/phppec.php ../extensions/components/com_redcore/ ../extensions/libraries/ ../extensions/modules/ ../extensions/plugins/');
+		$this->_exec(
+			'php checkers/phppec.php ../extensions/components/com_redcore/ ../extensions/libraries/ ../extensions/modules/ ../extensions/plugins/'
+		);
 	}
 
 	/**
@@ -384,7 +396,9 @@ class RoboFile extends \Robo\Tasks
 	 */
 	public function checkForMissedDebugCode()
 	{
-		$this->_exec('php checkers/misseddebugcodechecker.php ../extensions/components/com_redcore/ ../extensions/libraries/ ../extensions/modules/ ../extensions/plugins/');
+		$this->_exec(
+			'php checkers/misseddebugcodechecker.php ../extensions/components/com_redcore/ ../extensions/libraries/ ../extensions/modules/ ../extensions/plugins/'
+		);
 	}
 
 	/**
@@ -428,125 +442,224 @@ class RoboFile extends \Robo\Tasks
 	 *
 	 * @return void
 	 */
-	public function runDockerTestEnvironment()
+	public function runDockerTests()
 	{
-		$dockerConfig = file_exists('tests/docker/dockertests.yml') ? Yaml::parse(file_get_contents('tests/docker/dockertests.yml')) : [];
+		$dockerConfig = file_exists('docker/dockertests.yml') ? Yaml::parse(file_get_contents('docker/dockertests.yml')) : [];
 
 		// Checks if config exists and if there are php versions and Joomla versions to test
-		if ($dockerConfig && count($dockerConfig)
-			&& isset($dockerConfig['appname']) && $dockerConfig['appname'] != ''
-			&& isset($dockerConfig['phpversions']) && count($dockerConfig['phpversions'])
-			&& isset($dockerConfig['joomlaversions']) && count($dockerConfig['joomlaversions'])
-			)
+		if (!$dockerConfig
+			|| !count($dockerConfig)
+			|| !isset($dockerConfig['appname']) || $dockerConfig['appname'] == ''
+			|| !isset($dockerConfig['phpversions']) || !count($dockerConfig['phpversions'])
+			|| !isset($dockerConfig['joomlaversions']) || !count($dockerConfig['joomlaversions']))
 		{
-			$baseDir = getcwd();
+			echo "Invalid or unexisting docker config file" . chr(10);
 
-			// Array for storing containers
-			$dockerContainer = array();
+			exit;
+		}
 
-			// Base app name in lowercase to prevent problems in docker image and container names
-			$appName = strtolower($dockerConfig['appname']);
+		$baseDir = getcwd();
 
-			// Docker variables to replace in all files using variables
-			$dockerVariables = array(
-				'app:name',
-				'php:version',
-				'joomla:version',
-				'github:token',
-				'slack:token',
-				'slack:channel'
-			);
+		// Array for storing containers
+		$dockerContainer = array();
 
-			// Initial Docker values to replace for variables (it will be populated as needed in the upcoming loops)
-			$dockerValues = array(
-				'app:name' => $appName
-			);
+		// Base app name in lowercase to prevent problems in docker image and container names
+		$appNameOrig = $dockerConfig['appname'];
+		$appName = strtolower($appNameOrig);
 
-			$dockerValues['github:token'] = isset($dockerConfig['github-token']) ? $dockerConfig['github-token'] : (getenv('GITHUB_TOKEN') ? getenv('GITHUB_TOKEN') : '');
-			$dockerValues['slack:token'] = isset($dockerConfig['slack-token']) ? $dockerConfig['slack-token'] : (getenv('SLACK_TOKEN') ? getenv('SLACK_TOKEN') : '');
-			$dockerValues['slack:channel'] = isset($dockerConfig['slack-channel']) ? $dockerConfig['slack-channel'] : (getenv('SLACK_CHANNEL') ? getenv('SLACK_CHANNEL') : '');
+		// Docker variables to replace in all files using variables
+		$dockerVariables = array(
+			'app:name',
+			'php:version',
+			'joomla:version',
+			'php:version-name',
+			'joomla:version-name',
+			'php:version-clean',
+			'joomla:version-clean',
+			'github:token',
+			'slack:token',
+			'slack:channel'
+		);
 
-			// Tries to delete the _dockerfiles working folder if it exists, and re-creates it
+		// Initial Docker values to replace for variables (it will be populated as needed in the upcoming loops)
+		$dockerValues = array(
+			'app:name' => $appName
+		);
+
+		$dockerValues['github:token'] = isset($dockerConfig['github-token'])
+			? $dockerConfig['github-token']
+			: (getenv('GITHUB_TOKEN') ? getenv('GITHUB_TOKEN') : '');
+		$dockerValues['slack:token'] = isset($dockerConfig['slack-token'])
+			? $dockerConfig['slack-token']
+			: (getenv('SLACK_TOKEN') ? getenv('SLACK_TOKEN') : '');
+		$dockerValues['slack:channel'] = isset($dockerConfig['slack-channel'])
+			? $dockerConfig['slack-channel']
+			: (getenv('SLACK_CHANNEL') ? getenv('SLACK_CHANNEL') : '');
+
+		// Tries to delete the _dockerfiles working folder if it exists, and re-creates it
+		try
+		{
+			$this->_deleteDir('_dockerfiles');
+		}
+		catch (Exception $e)
+		{
+		}
+
+		$this->taskFileSystemStack()
+			->mkdir('_dockerfiles')
+			->run();
+
+		// Clones Joomla under _dockerfiles/cms for each version to test according to yml file
+		foreach ($dockerConfig['joomlaversions'] as $joomlaVersion)
+		{
+			$this->taskGitStack()
+				->cloneRepo('-b ' . $joomlaVersion . ' --single-branch --depth 1 https://github.com/joomla/joomla-cms.git', '_dockerfiles/cms/' . $joomlaVersion)
+				->run();
+		}
+
+		// Makes installer available to the containers
+		$this->_exec('mkdir _dockerfiles/cms/' . $appName);
+		$this->_exec('cp -f releases/' . $appNameOrig . '.zip _dockerfiles/cms/' . $appName);
+
+		// Zips Joomla
+		chdir('_dockerfiles/cms');
+		$this->_exec('zip -q -r .cms.zip . -x *.git/*');
+		chdir($baseDir);
+		$this->taskFileSystemStack()
+			->rename('_dockerfiles/cms/.cms.zip', '_dockerfiles/.cms.zip')
+			->run();
+
+		// Zips Test scripts
+		chdir($baseDir . '/../');
+		$this->_exec('zip --symlinks -q -r tests/_dockerfiles/.tests.zip tests -x tests/_dockerfiles/**\*');
+
+		// Going back to tests directory
+		chdir($baseDir);
+
+		// DB container run (trying to stop it first in case it already exists)
+		try
+		{
+			$this->taskDockerStop('db')->run();
+			$this->taskDockerRemove('db')->run();
+		}
+		catch (Exception $e)
+		{
+		}
+
+		$dockerContainer['db'] = $this->taskDockerRun('mysql')
+			->detached()
+			->env('MYSQL_ROOT_PASSWORD', 'root')
+			->name('db')
+			->publish(13306, 3306)
+			->run();
+
+		// Pulls the latest version of the joomla-test-client image
+		$this->taskDockerPull('jatitoam/joomla-test-client:firefox')
+			->run();
+
+		$i = 0;
+
+		// Actions per php version to test
+		foreach ($dockerConfig['phpversions'] as $phpVersion)
+		{
+			$dockerValues['php:version'] = $phpVersion;
+			$phpVersionName = str_replace('.', '-', $phpVersion);
+			$phpVersionClean = str_replace('.', '', $phpVersion);
+			$dockerValues['php:version-name'] = $phpVersionName;
+			$dockerValues['php:version-clean'] = $phpVersionClean;
+
+			// Creates the base php folder to build the server (app-layer) container.  Also copies base Dockerfile replacing variables
+			$this->taskFileSystemStack()
+				->mkdir('_dockerfiles/php/' . $phpVersion)
+				->copy('docker/Dockerfile-server', '_dockerfiles/php/' . $phpVersion . '/Dockerfile')
+				->run();
+			$this->replaceVariablesInFile('_dockerfiles/php/' . $phpVersion . '/Dockerfile', $dockerVariables, $dockerValues);
+
+			// Unzips Joomla installs to make them available to the containers
+			$this->_exec('unzip -q _dockerfiles/.cms.zip -d _dockerfiles/php/' . $phpVersion . '/joomla');
+
+			// Tries to stop the container in case one with the same name already exists
 			try
 			{
-				$this->_deleteDir('tests/_dockerfiles');
+				$this->taskDockerStop($appName . '-test-server-' . $phpVersionClean)->run();
+				$this->taskDockerRemove($appName . '-test-server-' . $phpVersionClean)->run();
 			}
 			catch (Exception $e)
 			{
 			}
 
-			$this->taskFileSystemStack()
-				->mkdir('tests/_dockerfiles')
+			// Tries to delete the image to be created, in case it already exists
+			try
+			{
+				$this->_exec('docker rmi ' . $appName . '-test-server:' . $phpVersion);
+			}
+			catch (Exception $e)
+			{
+			}
+
+			// Pulls the latest version of the joomla-test-server image for this php version
+			$this->taskDockerPull('jatitoam/joomla-test-server:' . $phpVersion)
 				->run();
 
-			// Clones Joomla under _dockerfiles/cms for each version to test according to yml file
+			// Builds the specific php-version container of the joomla-test-server Docker image
+			$this->taskDockerBuild('_dockerfiles/php/' . $phpVersion)
+				->tag($appName . '-test-server:' . $phpVersion)
+				->run();
+
+			// Executes the app-layer container for this php version
+			// @toDO: Allow multiple versions of the app, for now it's "unique" version
+			$dockerContainer['php-' . $phpVersion] = $this->taskDockerRun($appName . '-test-server:' . $phpVersion)
+				->detached()
+				->env('JOOMLA_TEST_APP_NAME', $appName)
+				->env('JOOMLA_TEST_JOOMLA_VERSIONS', implode(',', $dockerConfig['joomlaversions']))
+				->env('JOOMLA_TEST_APP_VERSIONS', 'unique')
+				->name($appName . '-test-server-' . $phpVersionClean)
+				->publish(8000 + (int) $phpVersionClean, 80)
+				->link($dockerContainer['db'], 'mysql')
+				->run();
+
+			// Client-actions related to the specific Joomla version
 			foreach ($dockerConfig['joomlaversions'] as $joomlaVersion)
 			{
-				$this->taskGitStack()
-					->cloneRepo('-b ' . $joomlaVersion . ' --single-branch --depth 1 https://github.com/joomla/joomla-cms.git', 'tests/_dockerfiles/cms/' . $joomlaVersion)
-					->run();
-			}
+				$dockerValues['joomla:version'] = $joomlaVersion;
+				$joomlaVersionName = str_replace('.', '-', $joomlaVersion);
+				$joomlaVersionClean = str_replace('.', '', $joomlaVersion);
+				$dockerValues['joomla:version-name'] = $joomlaVersionName;
+				$dockerValues['joomla:version-clean'] = $joomlaVersionClean;
 
-			// Zips Joomla
-			chdir('tests/_dockerfiles/cms');
-			$this->_exec('zip -q -r .cms.zip . -x *.git/*');
-			chdir($baseDir);
-			$this->taskFileSystemStack()
-				->rename('tests/_dockerfiles/cms/.cms.zip', 'tests/_dockerfiles/.cms.zip')
-				->run();
-
-			// Zips App
-			$this->_exec('zip -q -r tests/_dockerfiles/.' . $appName . '.zip . -x .git/**\* .dist/**\* .releases/**\* .travis/**\* node_modules/**\* releases/**\* tests/**\* vendor/**\*');
-
-			// Zips Test scripts
-			$this->_exec('zip --symlinks -q -r tests/_dockerfiles/.tests.zip codeception.* composer.* RoboFile.php tests vendor -x tests/_dockerfiles/**\*');
-
-			// DB container run (trying to stop it first in case it already exists)
-			try
-			{
-				$this->taskDockerStop('db')->run();
-				$this->taskDockerRemove('db')->run();
-			}
-			catch (Exception $e)
-			{
-			}
-
-			$dockerContainer['db'] = $this->taskDockerRun('mysql')
-				->detached()
-				->env('MYSQL_ROOT_PASSWORD', 'root')
-				->name('db')
-				->publish(13306, 3306)
-				->run();
-
-			// Pulls the latest version of the joomla-test-client image
-			$this->taskDockerPull('jatitoam/joomla-test-client:firefox')
-				->run();
-
-			$i = 0;
-
-			// Actions per php version to test
-			foreach ($dockerConfig['phpversions'] as $phpVersion)
-			{
-				$dockerValues['php:version'] = $phpVersion;
-
-				// Creates the base php folder to build the server (app-layer) container.  Also copies base Dockerfile replacing variables
+				// PHP-Joomla version client container folder with app installer and container configuration files
 				$this->taskFileSystemStack()
-					->mkdir('tests/_dockerfiles/php/' . $phpVersion)
-					->copy('tests/docker/Dockerfile-server', 'tests/_dockerfiles/php/' . $phpVersion . '/Dockerfile')
+					->mkdir('_dockerfiles/client/' . $phpVersion . '/' . $joomlaVersion . '/' . $appName)
+					->copy('docker/Dockerfile-client', '_dockerfiles/client/' . $phpVersion . '/' . $joomlaVersion . '/Dockerfile')
+					->copy('docker/docker-entrypoint-specific.sh', '_dockerfiles/client/' . $phpVersion . '/' . $joomlaVersion . '/entrypoint-specific.sh')
 					->run();
-				$this->replaceVariablesInFile('tests/_dockerfiles/php/' . $phpVersion . '/Dockerfile', $dockerVariables, $dockerValues);
+				$this->replaceVariablesInFile('_dockerfiles/client/' . $phpVersion . '/' . $joomlaVersion . '/Dockerfile', $dockerVariables, $dockerValues);
+				$this->replaceVariablesInFile(
+					'_dockerfiles/client/' . $phpVersion . '/' . $joomlaVersion . '/entrypoint-specific.sh', $dockerVariables, $dockerValues
+				);
 
-				// Unzips Joomla installs to make them available to the containers
-				$this->_exec('unzip -q tests/_dockerfiles/.cms.zip -d tests/_dockerfiles/php/' . $phpVersion . '/joomla');
+				// Unzips app tests files/folders in the container files
+				$this->_exec('unzip -q _dockerfiles/.tests.zip -d _dockerfiles/client/' . $phpVersion . '/' . $joomlaVersion . '/' . $appName);
 
-				// Unzips app installer to make it available to the containers (it does not include tests and other folders that won't be needed in release)
-				$this->_exec('unzip -q tests/_dockerfiles/.' . $appName . '.zip -d tests/_dockerfiles/php/' . $phpVersion . '/' . $appName);
+				// Codeception configuration files with variable replacement
+				$this->taskFileSystemStack()
+					->copy(
+						'docker/acceptance.suite.dist.yml', '_dockerfiles/client/' . $phpVersion . '/' . $joomlaVersion . '/' . $appName . '/tests/acceptance.suite.yml'
+					)
+					->copy('docker/api.suite.dist.yml', '_dockerfiles/client/' . $phpVersion . '/' . $joomlaVersion . '/' . $appName . '/tests/api.suite.yml')
+					->run();
+				$this->replaceVariablesInFile(
+					'_dockerfiles/client/' . $phpVersion . '/' . $joomlaVersion . '/' . $appName . '/tests/api.suite.yml', $dockerVariables, $dockerValues
+				);
+				$this->replaceVariablesInFile(
+					'_dockerfiles/client/' . $phpVersion . '/' . $joomlaVersion . '/' . $appName . '/tests/acceptance.suite.yml', $dockerVariables, $dockerValues
+				);
 
 				// Tries to stop the container in case one with the same name already exists
 				try
 				{
-					$this->taskDockerStop($appName . '-test-server-' . $phpVersion)->run();
-					$this->taskDockerRemove($appName . '-test-server-' . $phpVersion)->run();
+					$this->taskDockerStop($appName . '-test-client-' . $phpVersionClean . '-' . $joomlaVersionClean)->run();
+					$this->taskDockerRemove($appName . '-test-client-' . $phpVersionClean . '-' . $joomlaVersionClean)->run();
 				}
 				catch (Exception $e)
 				{
@@ -555,93 +668,29 @@ class RoboFile extends \Robo\Tasks
 				// Tries to delete the image to be created, in case it already exists
 				try
 				{
-					$this->_exec('docker rmi ' . $appName . '-test-server:' . $phpVersion);
+					$this->_exec('docker rmi ' . $appName . '-test-client:' . $phpVersion . '-' . $joomlaVersion);
 				}
 				catch (Exception $e)
 				{
 				}
 
-				// Pulls the latest version of the joomla-test-server image for this php version
-				$this->taskDockerPull('jatitoam/joomla-test-server:' . $phpVersion)
+				// Builds the specific php/joomla-version container of the joomla-test-client Docker image
+				$this->taskDockerBuild('_dockerfiles/client/' . $phpVersion . '/' . $joomlaVersion)
+					->tag($appName . '-test-client:' . $phpVersion . '-' . $joomlaVersion)
 					->run();
 
-				// Builds the specific php-version container of the joomla-test-server Docker image
-				$this->taskDockerBuild('tests/_dockerfiles/php/' . $phpVersion)
-					->tag($appName . '-test-server:' . $phpVersion)
-					->run();
-
-				// Executes the app-layer container for this php version
+				// Executes the client-layer container for this php/joomla version
 				// @toDO: Allow multiple versions of the app, for now it's "unique" version
-				$dockerContainer['php-' . $phpVersion] = $this->taskDockerRun($appName . '-test-server:' . $phpVersion)
-					->detached()
-					->env('JOOMLA_TEST_APP_NAME', $appName)
-					->env('JOOMLA_TEST_JOOMLA_VERSIONS', implode(',', $dockerConfig['joomlaversions']))
-					->env('JOOMLA_TEST_APP_VERSIONS', 'unique')
-					->name($appName . '-test-server-' . $phpVersion)
-					->publish(8000 + (int) str_replace('.', '', $phpVersion), 80)
-					->link($dockerContainer['db'], 'mysql')
+				$dockerContainer['client-' . $phpVersion . '-' . $joomlaVersion] = $this->taskDockerRun(
+						$appName . '-test-client:' . $phpVersion . '-' . $joomlaVersion
+					)
+					// ->detached()
+					->name($appName . '-test-client-' . $phpVersionClean . '-' . $joomlaVersionClean)
+					->publish(5900 + $i, 5900)
+					->link($dockerContainer['php-' . $phpVersion], $appName . '-test-server-' . $phpVersionClean)
 					->run();
 
-				// Client-actions related to the specific Joomla version
-				foreach ($dockerConfig['joomlaversions'] as $joomlaVersion)
-				{
-					$dockerValues['joomla:version'] = $joomlaVersion;
-
-					// PHP-Joomla version client container folder with app installer and container configuration files
-					$this->taskFileSystemStack()
-						->mkdir('tests/_dockerfiles/client/' . $phpVersion . '/' . $joomlaVersion . '/' . $appName)
-						->copy('tests/docker/Dockerfile-client', 'tests/_dockerfiles/client/' . $phpVersion . '/' . $joomlaVersion . '/Dockerfile')
-						->copy('tests/docker/docker-entrypoint-specific.sh', 'tests/_dockerfiles/client/' . $phpVersion . '/' . $joomlaVersion . '/entrypoint-specific.sh')
-						->run();
-					$this->replaceVariablesInFile('tests/_dockerfiles/client/' . $phpVersion . '/' . $joomlaVersion . '/Dockerfile', $dockerVariables, $dockerValues);
-					$this->replaceVariablesInFile('tests/_dockerfiles/client/' . $phpVersion . '/' . $joomlaVersion . '/entrypoint-specific.sh', $dockerVariables, $dockerValues);
-
-					// Unzips app tests files/folders in the container files
-					$this->_exec('unzip -q tests/_dockerfiles/.tests.zip -d tests/_dockerfiles/client/' . $phpVersion . '/' . $joomlaVersion . '/' . $appName);
-
-					// Codeception configuration files with variable replacement
-					$this->taskFileSystemStack()
-						->copy('tests/docker/acceptance.suite.dist.yml', 'tests/_dockerfiles/client/' . $phpVersion . '/' . $joomlaVersion . '/' . $appName . '/tests/acceptance.suite.yml')
-						->copy('tests/docker/api.suite.dist.yml', 'tests/_dockerfiles/client/' . $phpVersion . '/' . $joomlaVersion . '/' . $appName . '/tests/api.suite.yml')
-						->run();
-					$this->replaceVariablesInFile('tests/_dockerfiles/client/' . $phpVersion . '/' . $joomlaVersion . '/' . $appName . '/tests/api.suite.yml', $dockerVariables, $dockerValues);
-					$this->replaceVariablesInFile('tests/_dockerfiles/client/' . $phpVersion . '/' . $joomlaVersion . '/' . $appName . '/tests/acceptance.suite.yml', $dockerVariables, $dockerValues);
-
-					// Tries to stop the container in case one with the same name already exists
-					try
-					{
-						$this->taskDockerStop($appName . '-test-client-' . $phpVersion . '-' . $joomlaVersion)->run();
-						$this->taskDockerRemove($appName . '-test-client-' . $phpVersion . '-' . $joomlaVersion)->run();
-					}
-					catch (Exception $e)
-					{
-					}
-
-					// Tries to delete the image to be created, in case it already exists
-					try
-					{
-						$this->_exec('docker rmi ' . $appName . '-test-client:' . $phpVersion . '-' . $joomlaVersion);
-					}
-					catch (Exception $e)
-					{
-					}
-
-					// Builds the specific php/joomla-version container of the joomla-test-client Docker image
-					$this->taskDockerBuild('tests/_dockerfiles/client/' . $phpVersion . '/' . $joomlaVersion)
-						->tag($appName . '-test-client:' . $phpVersion . '-' . $joomlaVersion)
-						->run();
-
-					// Executes the client-layer container for this php/joomla version
-					// @toDO: Allow multiple versions of the app, for now it's "unique" version
-					$dockerContainer['client-' . $phpVersion . '-' . $joomlaVersion] = $this->taskDockerRun($appName . '-test-client:' . $phpVersion . '-' . $joomlaVersion)
-						->detached()
-						->name($appName . '-test-client-' . $phpVersion . '-' . $joomlaVersion)
-						->publish(5900 + $i, 5900)
-						->link($dockerContainer['php-' . $phpVersion], $appName . '-test-server-' . $phpVersion)
-						->run();
-
-					$i ++;
-				}
+				$i ++;
 			}
 		}
 	}

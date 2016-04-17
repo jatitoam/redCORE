@@ -4,4 +4,4 @@ modules:
       - ApiHelper
       - REST:
           depends: PhpBrowser
-          url: http://{app:name}-test-server-{php:version}/{joomla:version}/
+          url: http://{app:name}-test-server-{php:version-clean}/{joomla:version}/

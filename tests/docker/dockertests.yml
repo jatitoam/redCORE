@@ -1,3 +1,3 @@
-appname: "redcore"
-phpversions: [ 5.5, 5.6 ]
-joomlaversions: [ 3.4.4, staging ]
+appname: "redCORE"
+phpversions: [ "7.0" ]
+joomlaversions: [ "staging" ]

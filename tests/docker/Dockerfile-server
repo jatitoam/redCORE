@@ -3,5 +3,4 @@ MAINTAINER Tito Alvarez <augustoalvarez@gmail.com> (@jaTITOam)
 
 # Copy Joomla
 COPY joomla /usr/src/test
-COPY {app:name} /usr/src/app
 RUN chown -R www-data:www-data /usr/src/test
