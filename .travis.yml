@@ -1,6 +1,6 @@
 language: generic
 php:
-- 5.6
+- 7.0
 
 sudo: required
 dist: trusty
@@ -20,3 +20,7 @@ script:
 - php .travis/phpcs.php
 - php .travis/misseddebugcodechecker.php component/ libraries/ modules/ plugins/
 - vendor/bin/robo run:docker
+
+notifications:
+  slack:
+    secure: AeKLAsle7sQ3lGpXeNk0ePovlnf0QTggiKhHuvEH78TD5aN8OjYEqbLBhFWWcejn4hHWHOeR9pUv0wqClEGirMioWI5noQvE6D6bV9oBrAhx2FKLVxCA3YN23i+ehNpk3+FpVhkmagigiEnPZqqFcqFw5x276GVZTC8etNmzs/w=

@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<contentelement type="contentelement">
+  <name>Contents</name>
+  <author>redCOMPONENT</author>
+  <copyright>Copyright (C) 2008 - 2016 redCOMPONENT.com. All rights reserved.</copyright>
+  <version>1.8.3</version>
+  <description>Translation definition for Joomla Content component</description>
+  <reference>
+    <table name="content">
+      <field name="id" type="referenceid" translate="0" alwaysFallback="false" filter="RAW" description="">ID</field>
+      <field name="title" type="titletext" translate="1" alwaysFallback="false" filter="RAW" description="" length="50" maxlength="250">Title</field>
+      <field name="alias" type="text" translate="0" alwaysFallback="false" filter="RAW" description="" length="50" maxlength="250">Title Alias</field>
+      <field name="catid" type="hiddentext" translate="0" alwaysFallback="false" filter="RAW" description="" scope="com_content">Category</field>
+      <field name="introtext" type="htmltext" translate="1" alwaysFallback="false" filter="RAW" description="" ebuttons="ignore">Article Text</field>
+      <field name="fulltext" type="htmltext" translate="1" alwaysFallback="false" filter="RAW" description="" ebuttons="readmore">Fulltext</field>
+      <field name="metakey" type="text" translate="1" alwaysFallback="false" filter="RAW" description="" length="50" maxlength="250">Metakey</field>
+      <field name="metadesc" type="textarea" translate="1" alwaysFallback="false" filter="RAW" description="" rows="5" columns="80">Metadesc</field>
+      <field name="state" type="state" translate="1" alwaysFallback="true" filter="RAW" description="" stateoptions="0,1,2,-2">State</field>
+      <field name="publish_up" type="text" translate="1" alwaysFallback="true" filter="RAW" description="">Start Publishing</field>
+      <field name="publish_down" type="text" translate="1" alwaysFallback="true" filter="RAW" description="">Finish Publishing</field>
+      <field name="attribs" type="params" translate="1" alwaysFallback="true" filter="RAW" description="" formname="article" fieldsname="attribs" fieldsets="basic,editorConfig">Attributes</field>
+      <filter><![CDATA[]]></filter>
+    </table>
+    <component>
+      <editForm admin="true" option="com_content" view="article" layout="edit" identifier="id" showbutton="true" htmlposition=".btn-toolbar:first"/>
+      <editForm admin="false" option="com_content" view="form" layout="edit" identifier="a_id" showbutton="true" htmlposition=".btn-toolbar:first"/>
+    </component>
+  </reference>
+</contentelement>
